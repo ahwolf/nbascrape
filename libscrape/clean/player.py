@@ -43,8 +43,12 @@ class PlayerNbaCom:
 
         all_players = []
         for team_name, team in [('home',home_team), ('away',away_team)]:
-            
-            players = team.findAll("pl")
+            try:    
+                players = team.findAll("pl")
+            except:
+                import pdb
+                pdb.set_trace()
+
             team_data = team['tm'].split('|')[-1]
 
 
@@ -187,11 +191,19 @@ class PlayerCbsSports:
 
     def resolveNewPlayers(self):
         for row in self.data:
+
             cbssports_player_id = row[1]
-            full_name           = row[2].replace('&nbsp;',' ').strip()
+            print row
+            try:
+                full_name = str(unicode(row[2].replace('&nbsp;',' '), 'ISO-8859-1','replace').replace(u'\xa0',u' ').replace(u'\xc2','')).strip()
+            except:
+                import pdb
+                pdb.set_trace()
             first_name          = full_name.split(' ')[0]
             last_name           = ' '.join(full_name.split(' ')[1:])
             jersey_number       = row[3]
+            if jersey_number == '':
+                jersey_number = '0'
             cbs_team_code       = row[0]
             position            = row[4]
 

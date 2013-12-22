@@ -69,17 +69,33 @@ def scrape(dbobj, dt, files):
 def main():
 
     files = []
-    try:
-        dt = sys.argv[1]
-        dt = datetime.date(*map(int,dt.split('-')))
+    # try:
+    #     dt = sys.argv[1]
+    #     dt = datetime.date(*map(int,dt.split('-')))
 
-        if len(sys.argv) > 2:
-            files = sys.argv[2:]
-    except:
-        dt = datetime.date.today() - datetime.timedelta(days=1)
+    #     if len(sys.argv) > 2:
+    #         files = sys.argv[2:]
+    # except:
+    #     dt = datetime.date.today() - datetime.timedelta(days=1)
 
-    print dt
-    scrapeDailyAuto(dt, files)
+    # from wikipedia, all days to the basketball season over the last 3 years
+#    dts = [[(2011,1,24),(2011,6,12)],[(2011,12,25),(2012,06,21)],[(2012,10,30),(2013,06,20)]]
+    dts = [[(2013,12,5),(2013,12,8)]]
+    for dt_set in dts:
+        start_date = dt_set[0]
+        end_date = dt_set[1]
+
+        # convert to a date object so we can just print them out each date
+        d1 = datetime.date(start_date[0],start_date[1],start_date[2])
+        d2 = datetime.date(end_date[0],end_date[1],end_date[2])
+
+        # make a list of the dates
+        list_of_dates = [d1 + datetime.timedelta(days=x) for x in range((d2-d1).days + 1)]
+
+        # for each day, run scrape for all the basketball data!!
+        for dt in list_of_dates:
+            print dt
+            scrapeDailyAuto(dt, files)
     
 
 if __name__ == '__main__':

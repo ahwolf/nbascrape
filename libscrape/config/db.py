@@ -1,10 +1,24 @@
 import MySQLdb
 
+# Pass these data structures as params to the DB class
+dbconn_prod = {
+    'user': 'ahwolf',
+    'passwd': 'internet',
+    'db': 'nbascrape'
+}
+
+
+dbconn_test = {
+    'user': 'ahwolf',
+    'passwd': 'internet',
+    'db': 'nbascrape_test'
+}
 
 class Db:
 
     def __init__(self, credentials):
         self.credentials = credentials
+        print self.credentials
         self.conn = MySQLdb.connect(**credentials)
         
 

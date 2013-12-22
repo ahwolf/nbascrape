@@ -98,6 +98,7 @@ def go(tuple_games_and_files, dbobj):
         print "  + Player database"
         if 'boxscore_nbacom' in files:
             obj = player.PlayerNbaCom(LOGDIR_EXTRACT + files['boxscore_nbacom'], gamedata, dbobj)
+            
             obj.resolveNewPlayers()
     
         if 'shotchart_cbssports' in files:

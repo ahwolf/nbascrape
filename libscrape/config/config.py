@@ -2,9 +2,9 @@ from libscrape.config import db
 
 
 dbconn_prod_nba = {
-    'user': 'username_for_database',
-    'passwd': 'password_for_database',
-    'db': 'production_database_name'
+    'user': 'ahwolf',
+    'passwd': 'internet',
+    'db': 'nbascrape'
 }
 
 dbconn_prod_wnba = {

@@ -72,8 +72,13 @@ class Clean:
         ]
 
         all_plays = self.plays
-        for function_name in cleaning_functions:
-            all_plays = function_name(all_plays)
+        
+        # sometimes there is just no data
+        if all_plays:
+            for function_name in cleaning_functions:
+                all_plays = function_name(all_plays)
+        else:
+            print "Nothing in file, skipping"
 
         logging.info("CLEAN - playbyplay_espn - game_id: %s - play count: %s" % (self.gamedata['id'], len(all_plays)))
         self.dumpIntoFile(all_plays) 
@@ -81,6 +86,7 @@ class Clean:
 
     def _getPlays(self):
         filename = LOGDIR_EXTRACT + self.filename
+
         data = [line for line in csv.reader(open(filename,'r'),delimiter=',',lineterminator='\n')]
 
         headers = ['period','play_index','time_left','away_score','home_score','away_play','home_play']
