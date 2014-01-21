@@ -75,7 +75,6 @@ def func_shotchart_wnbacom(game, filename):
 
 
 def go(sourcedocs):
-
     for gamedata, files in sourcedocs:
         print "+++ EXTRACT: %s - %s" % (gamedata['id'], gamedata['abbrev'])
 

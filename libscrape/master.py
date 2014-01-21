@@ -29,6 +29,8 @@ def scrapeDailyAuto(dt, files = None):
     config_no_pw = config.config['db'].copy()
     del config_no_pw['passwd']
     
+
+
     if not files:
         files = [
             'boxscore_nbacom',
@@ -79,8 +81,11 @@ def main():
     #     dt = datetime.date.today() - datetime.timedelta(days=1)
 
     # from wikipedia, all days to the basketball season over the last 3 years
-#    dts = [[(2011,1,24),(2011,6,12)],[(2011,12,25),(2012,06,21)],[(2012,10,30),(2013,06,20)]]
-    dts = [[(2013,12,5),(2013,12,8)]]
+    
+    # dts = [[(2011,1,24),(2011,6,12)],[(2011,12,25),(2012,06,21)],[(2012,10,30),(2013,06,20)]]
+
+    dts = [[(2010,10,26),(2011,4,16)]]
+
     for dt_set in dts:
         start_date = dt_set[0]
         end_date = dt_set[1]

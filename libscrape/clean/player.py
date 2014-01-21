@@ -27,7 +27,7 @@ class PlayerNbaCom:
         self.soup = BeautifulStoneSoup(self.xml)
         self.date_played = self.gamedata['date_played']
         self.db = dbobj
-
+        self.filename = filename
 
     def resolveNewPlayers(self):
         players = self.getPlayers()
@@ -46,8 +46,9 @@ class PlayerNbaCom:
             try:    
                 players = team.findAll("pl")
             except:
-                import pdb
-                pdb.set_trace()
+                break
+                # import pdb
+                # pdb.set_trace()
 
             team_data = team['tm'].split('|')[-1]
 
