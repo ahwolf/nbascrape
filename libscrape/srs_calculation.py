@@ -107,6 +107,8 @@ def get_initial_season_SRS_off_def(season,
   win_dict = defaultdict(int)
 
   # create the SRS dictionary
+  total_home_points = 0
+  total_away_points = 0
   for home_team, away_team, home_score, away_score in rows:
     
     # update the margin of victory for both home and away teams
@@ -120,18 +122,25 @@ def get_initial_season_SRS_off_def(season,
     home_opponent_dict[home_team].append(away_team)
     away_opponent_dict[away_team].append(home_team)
 
+    # keep track of total points scored
+    total_home_points += home_score
+    total_away_points += away_score
+
     # get the number of wins, mov > 0 means that the home team won
     if home_score > away_score:
       win_dict[home_team] += 1
     else:
       win_dict[away_team] += 1
 
+  average_home_points = float(total_home_points) / len(rows)
+  average_away_points = float(total_away_points) / len(rows)
+
   # adjust the margin of victory to be an average
   for team, score in home_off_dict.iteritems():
-    home_off_dict[team] = float(score)/len(home_opponent_dict[team])
-    home_def_dict[team] = float(home_def_dict[team])/len(home_opponent_dict[team])
-    away_off_dict[team] = float(away_off_dict[team])/len(away_opponent_dict[team])
-    away_def_dict[team] = float(away_def_dict[team])/len(away_opponent_dict[team])
+    home_off_dict[team] = float(score)/len(home_opponent_dict[team]) - average_home_points
+    home_def_dict[team] = average_away_points - float(home_def_dict[team])/len(home_opponent_dict[team])
+    away_off_dict[team] = float(away_off_dict[team])/len(away_opponent_dict[team]) - average_away_points
+    away_def_dict[team] = average_home_points - float(away_def_dict[team])/len(away_opponent_dict[team])
 
   return (home_off_dict, 
          home_def_dict,
@@ -212,16 +221,18 @@ def make_srs(margin_of_victory_dict, opponent_dict):
 
 
 def iterate_one_srs_dict(opponent_dict,
-                    orig_score_dict,
-                    old_srs_dict):
+                         orig_score_dict,
+                         old_opp_srs_dict,
+                         old_self_srs_dict,
+                         omega=1):
   new_dict = {}
   for team, opponents in opponent_dict.iteritems():
     strength = 0
     for opponent in opponents:
-      strength += old_srs_dict[opponent]
+      strength += old_opp_srs_dict[opponent]
 
     # new srs value is the margin of victory +/- strength of schedule
-    new_dict[team] = orig_score_dict[team] + float(strength)/len(opponents)
+    new_dict[team] = ((orig_score_dict[team] + float(strength)/len(opponents)) * omega) + (old_self_srs_dict[team]*(1-omega))
   return new_dict
 
 def iterate_SRS_off_def(old_home_off_dict,
@@ -238,19 +249,23 @@ def iterate_SRS_off_def(old_home_off_dict,
   
   new_home_off_dict = iterate_one_srs_dict(home_opponent_dict,
                                            home_off_dict,
-                                           old_away_def_dict)
+                                           old_away_def_dict,
+                                           old_home_off_dict)
 
   new_home_def_dict = iterate_one_srs_dict(home_opponent_dict,
                                            home_def_dict,
-                                           old_away_off_dict)
+                                           old_away_off_dict,
+                                           old_home_def_dict)
 
   new_away_off_dict = iterate_one_srs_dict(away_opponent_dict,
                                            away_off_dict,
-                                           old_home_def_dict)
+                                           old_home_def_dict,
+                                           old_away_off_dict)
 
   new_away_def_dict = iterate_one_srs_dict(away_opponent_dict,
                                            away_def_dict,
-                                           old_home_off_dict)
+                                           old_home_off_dict,
+                                           old_away_def_dict)
 
   # for team, opponents in home_opponent_dict.iteritems():
   #   strength = 0
@@ -276,7 +291,7 @@ def make_srs_off_def(home_off_dict,
   old_away_def_dict = copy.deepcopy(away_def_dict)
 
   error = 100
-  max_iterations = 10
+  max_iterations = 100
   iteration_number = 0
   while error > 1e-10 and iteration_number < max_iterations:
     iteration_number += 1
@@ -380,6 +395,27 @@ def simulate_game_srs_home_away(home_team,
 
   return home_team_score > away_team_score
 
+def simulate_game_srs_off_def(home_team,
+                              away_team,
+                              srs_dict,
+                              average_home_score = 99,
+                              average_away_score = 96):
+
+  home_srs_diff = srs_dict["home_off"][home_team] - srs_dict["away_def"][away_team]
+  away_srs_diff = srs_dict["away_off"][away_team] - srs_dict["home_def"][home_team]
+
+  home_team_rating = average_home_score + home_srs_diff 
+  away_team_rating = average_away_score + away_srs_diff 
+
+  home_team_score = poisson(home_team_rating)
+  away_team_score = poisson(away_team_rating)
+  
+  while home_team_score == away_team_score:
+    home_team_score = poisson(home_team_rating*(5.0/48))
+    away_team_score = poisson(away_team_rating*(5.0/48))
+
+  return home_team_score > away_team_score
+
 def get_team_wins(season_rows):
   # get the actual number of wins
   actual_wins = defaultdict(int)
@@ -453,8 +489,8 @@ def simulate_rest_of_season(season,
 
 # MAIN TIME
 if __name__ == '__main__':
-  season = "2011-2012"
-  fraction = 1
+  season = "2010-2011"
+  fraction = 0.5
   simulations = 1000
   margin_of_victory_dict, opponent_dict, win_dict = get_initial_season_SRS(season,fraction=fraction)
   srs_dict = make_srs(margin_of_victory_dict, opponent_dict)
@@ -485,6 +521,10 @@ if __name__ == '__main__':
                                            away_def_dict,
                                            home_opponent_dict, 
                                            away_opponent_dict)
+
+  simulate_rest_of_season(season, srs_dict, win_dict, fraction, simulations, simulate_game_srs_off_def)
+
+
 
 
 
